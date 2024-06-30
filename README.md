@@ -1,9 +1,5 @@
 # fullinfo-test
 
-## Implementation
-
-Used create-react-app for front-end
-
 ## Task
 
 On https://api.citybik.es/v2/ you can find an API which can be used to retrieve data of city bike networks worldwide and the availability of bikes per network.
@@ -17,6 +13,59 @@ Write a proof of concept application which:
 Ensure and proof the most essential part of your code is covered by unit tests. Use any technology you like or think is necessary.
 
 Prepare a short presentation to explain your understanding of the problem, the assumptions you worked with, your approach, technical solution and a small demo.
+
+## Installation
+
+### 1. Clone the Repository
+```sh
+git clone <repository-url>
+cd <repository-directory>
+```
+
+### 2. Install Dependencies
+```sh
+npm install
+```
+
+### 3. Install MongoDB
+Follow the instructions on the [MongoDB website](https://docs.mongodb.com/manual/installation/) to install MongoDB on your machine.
+
+### 4. Start MongoDB
+Ensure that MongoDB is running on your machine. You can start MongoDB using the following command:
+
+- **On macOS and Linux**:
+```sh
+sudo service mongod start
+```
+
+- **On Windows**:
+Start the MongoDB service from the Services application or using the command prompt:
+```sh
+net start MongoDB
+```
+
+### 5. Initialize the Database
+Run the following command to initialize the database within the project folder:
+```sh
+mongo --eval "use bikedata"
+```
+
+### 6. Start the Application
+```sh
+npm start
+```
+
+## API Endpoints
+
+### Get Bike Data
+Fetch stored bike data for a specific city and date range.
+```http
+GET /api/bikedata?city=<city>&start=<start-date>&end=<end-date>
+```
+- **Parameters**:
+	- `city`: The name of the city.
+	- `start`: The start date (YYYY-MM-DD).
+	- `end`: The end date (YYYY-MM-DD).
 
 ## Available Scripts
 

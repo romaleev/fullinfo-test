@@ -1,8 +1,9 @@
 {
   "name": "fullinfo-test",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "dateformat": "^5.0.3",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "ky": "^1.4.0",
@@ -14,17 +15,28 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --watchAll=false",
+    "test": "jest",
+    "test0": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",
-    "server": "node --import=tsx src/server/index.tsx",
+    "server": "node --import=tsx src/server/index.ts",
+    "resetdb": "node --import=tsx src/server/reset.db.ts",
     "prepare": "husky",
     "update": "npm i npm-check-updates@latest --save-dev && ncu -u && npm i && npm audit fix && npm test"
   },
+  "imports": {
+    "#src/*": "./src/*",
+    "#client/*": "./src/client/*",
+    "#server/*": "./src/server/*"
+  },
+  "proxy": "http://localhost:4000",
   "lint-staged": {
     "src/**/*.ts": [
       "eslint --fix",
       "prettier --write"
     ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "eslintConfig": {
     "extends": [
@@ -49,18 +61,27 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^13.5.0",
+    "@types/dateformat": "^5.0.2",
     "@types/express": "^4.17.21",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.101",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/supertest": "^6.0.2",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.0.11",
+    "jest": "^29.7.0",
     "lint-staged": "^15.2.7",
     "npm-check-updates": "^16.14.20",
     "prettier": "^3.3.2",
     "prettier-plugin-organize-imports": "^3.2.4",
     "react-scripts": "5.0.1",
+    "recharts": "^2.13.0-alpha.4",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.15.8",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   }
