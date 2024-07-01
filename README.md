@@ -85,17 +85,17 @@ npm run reset-db
 
 ## Build
 
-Build client:
+Build client
 ```sh
 npm run build-client
 ```
 
-Build server:
+Build server
 ```sh
 npm run build-server
 ```
 
-Build both:
+Build both
 ```sh
 npm run build
 ```
@@ -105,6 +105,13 @@ Builds the app for production to the `build` folder.
 The build is minified and the filenames include the hashes.\
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+## Update
+
+Updates libraries to the latest versions
+```sh
+npm run update
+```
 
 ## Configuration
 
