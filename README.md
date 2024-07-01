@@ -14,6 +14,8 @@ Ensure and proof the most essential part of your code is covered by unit tests. 
 
 Prepare a short presentation to explain your understanding of the problem, the assumptions you worked with, your approach, technical solution and a small demo.
 
+![chart](presentation/chart.png)
+
 ## Installation
 
 ### 1. Clone the Repository
