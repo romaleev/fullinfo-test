@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
 	LineChart,
 	Line,
@@ -10,9 +10,9 @@ import {
 	ResponsiveContainer,
 } from 'recharts'
 import dateFormat from 'dateformat'
-import { fetchStoredData } from '#client/client.api'
+import { fetchStoredData } from '#client/clientApi'
 import { BikeData, ChartData } from '#src/interfaces'
-import config from '#src/config.json'
+import config from '#root/config.json'
 import '#client/App.css'
 
 const { cities } = config
@@ -23,17 +23,17 @@ const App: React.FC = () => {
 		dateFormat(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-mm-dd'),
 	)
 	const [end, setEnd] = useState(dateFormat(new Date(), 'yyyy-mm-dd'))
-	const didMount = useRef(false)
 
-	useEffect(() => {
-		const fetchData = async () => {
+	const fetchData = useCallback(async () => {
+		try {
 			const results: BikeData[][] = await Promise.all(
 				cities.map((city) => fetchStoredData(city, start, end)),
 			)
+
 			const combinedData: { [timestamp: string]: ChartData } = {}
 
 			results.forEach((cityData, cityIndex) => {
-				cityData.forEach((entry: BikeData) => {
+				cityData?.forEach((entry: BikeData) => {
 					const timestamp = entry.timestamp
 					if (!combinedData[timestamp]) {
 						combinedData[timestamp] = { timestamp }
@@ -42,28 +42,19 @@ const App: React.FC = () => {
 				})
 			})
 
-			setData(Object.values(combinedData))
-		}
+			const sortedData = Object.values(combinedData).sort((a, b) => {
+				return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+			})
 
-		if (!didMount.current) {
-			fetchData()
-			didMount.current = true
+			setData(Object.values(sortedData))
+		} catch (error) {
+			console.log(error)
 		}
 	}, [start, end])
 
-	const renderLines = () => {
-		return cities.map((city, index) => (
-			<Line
-				key={city}
-				type="monotone"
-				dataKey={city}
-				stroke={`hsl(${(index * 360) / cities.length}, 70%, 50%)`}
-				strokeWidth={3}
-				name={city}
-				dot={false}
-			/>
-		))
-	}
+	useEffect(() => {
+		fetchData()
+	}, [fetchData])
 
 	return (
 		<div className="container">
@@ -92,7 +83,17 @@ const App: React.FC = () => {
 							labelFormatter={(label) => dateFormat(new Date(label), 'mmmm dS, yyyy HH:00')}
 						/>
 						<Legend />
-						{renderLines()}
+						{cities.map((city, index) => (
+							<Line
+								key={city}
+								type="monotone"
+								dataKey={city}
+								stroke={`hsl(${(index * 360) / cities.length}, 70%, 40%)`}
+								strokeWidth={3}
+								name={city}
+								dot={false}
+							/>
+						))}
 					</LineChart>
 				</ResponsiveContainer>
 			</div>

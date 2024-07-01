@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { mongoUrl } from '#src/config.json'
+import { mongoUrl } from '#root/config.json'
 
 interface CustomError extends Error {
 	stack?: string

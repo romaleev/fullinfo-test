@@ -1,19 +1,17 @@
-import { fetchCityData } from '#server/fetchData'
-import { cities } from '#src/config.json'
+import { fetchCityData } from '#server/api/fetchData'
 import { Station } from '#src/interfaces'
 import dateFormat from 'dateformat'
 import {
 	debug,
-	pollIntervalSeconds,
+	pollIntervalSecondsInit,
 	pollIntervalSecondsMin,
 	pollIntervalSecondsMax,
-} from '#src/config.json'
+} from '#root/config.json'
 import { sleep } from '#src/util'
 
-const getStationsIntervalMin = (stations1: Station[], stations2: Station[]) => {
+export const getStationsIntervalMin = (stations1: Station[] = [], stations2: Station[] = []) => {
 	let minIntervalSeconds = pollIntervalSecondsMax
 	stations1.forEach((station1) => {
-		// debug && console.log(`station ${station1.id} ${station1.timestamp}`)
 		const station2 = stations2.find((station2) => station1.id === station2.id) || station1
 		const date1 = new Date(station1.timestamp)
 		const date2 = new Date(station2.timestamp)
@@ -31,7 +29,7 @@ const getStationsIntervalMin = (stations1: Station[], stations2: Station[]) => {
 	return minIntervalSeconds
 }
 
-export const determinePollingInterval = async (): Promise<number> => {
+export const determinePollingIntervalSeconds = async (cities: string[]): Promise<number> => {
 	const pollEndTime = Date.now() + pollIntervalSecondsMax * 1000
 	const minIntervals: { [city: string]: number } = {}
 
@@ -40,12 +38,21 @@ export const determinePollingInterval = async (): Promise<number> => {
 	})
 
 	let stationsLast: { [city: string]: Station[] } = {}
-	let pollInterval = pollIntervalSeconds
+	let pollInterval = pollIntervalSecondsInit
 	let pollIntervalMin = pollIntervalSecondsMax
 
-	console.log(
-		`Detecting poll interval between ${dateFormat(Date.now())} and ${dateFormat(pollEndTime)}`,
+	if (
+		pollIntervalSecondsInit <= pollIntervalSecondsMin ||
+		pollIntervalSecondsInit >= pollIntervalSecondsMax
 	)
+		throw new Error(
+			'pollIntervalSecondsInit must above pollingIntervalSecondsMin and below pollingIntervalSecondsMax',
+		)
+
+	debug &&
+		console.log(
+			`Detecting poll interval between ${dateFormat(Date.now())} and ${dateFormat(pollEndTime)}`,
+		)
 
 	while (Date.now() <= pollEndTime && pollInterval > pollIntervalSecondsMin) {
 		debug && console.log('attempt', dateFormat(Date.now()))

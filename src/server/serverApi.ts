@@ -1,6 +1,5 @@
 import express from 'express'
-import { BikeDataModel } from '#server/storeData'
-import dateFormat from 'dateformat'
+import { BikeDataModel } from '#server/db/storeData'
 
 export const setupApiEndpoints = (app: express.Express): void => {
 	app.get('/api/bikedata', async (req, res) => {

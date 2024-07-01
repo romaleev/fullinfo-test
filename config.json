@@ -4,10 +4,11 @@
 		"Paris"
 	],
 	"storeIntervalMinutes": 60,
-	"mongoUrl": "mongodb://localhost:27017/bikedata",
 	"networkCacheMinutes": 1440,
-	"pollIntervalSeconds": 60,
+	"pollIntervalSeconds": null,
+	"pollIntervalSecondsInit": 60,
 	"pollIntervalSecondsMin": 10,
 	"pollIntervalSecondsMax": 300,
-	"debug": true
+	"mongoUrl": "mongodb://localhost:27017/bikedata",
+	"debug": false
 }

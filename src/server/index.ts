@@ -1,11 +1,17 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import bodyParser from 'body-parser'
-import { scheduleTasks } from '#server/schedule'
-import { setupApiEndpoints } from '#server/server.api'
-import { mongoUrl, storeIntervalMinutes } from '#src/config.json'
-import { BikeDataModel } from '#server/storeData'
-import { determinePollingInterval } from '#server/polling'
+import { scheduleTasks } from '#server/scheduleTasks'
+import { setupApiEndpoints } from '#server/serverApi'
+import {
+	debug,
+	mongoUrl,
+	storeIntervalMinutes,
+	cities,
+	pollIntervalSeconds as pollIntervalSecondsDefault,
+} from '#root/config.json'
+import { BikeDataModel } from '#server/db/storeData'
+import { determinePollingIntervalSeconds } from '#server/api/pollingInterval'
 
 const app = express()
 const port = process.env.PORT || 4000
@@ -17,27 +23,38 @@ mongoose
 	.then(async () => {
 		console.log('Connected successfully to MongoDB')
 
-		const data = await BikeDataModel.find()
-		console.log('data', data)
-
-		// console.log(0, await mongoose.connection.db.listCollections().toArray())
+		if (debug) {
+			const data = await BikeDataModel.find()
+			console.log(
+				'saved data',
+				data.map(({ city, timestamp, averageFreeBikes }) => ({
+					city,
+					timestamp,
+					averageFreeBikes,
+				})),
+			)
+		}
 	})
 	.catch((err) => {
 		console.error('Failed to connect to MongoDB', err)
 	})
 
-// Setup API endpoints
 setupApiEndpoints(app)
 
 app.listen(port, () => {
 	console.log(`Server running on port ${port}`)
 })
 ;(async () => {
-	const pollingIntervalMinutes = await determinePollingInterval()
+	let pollIntervalSeconds: number
+	if (pollIntervalSecondsDefault) {
+		pollIntervalSeconds = pollIntervalSecondsDefault
+	} else {
+		pollIntervalSeconds = await determinePollingIntervalSeconds(cities)
+		console.log(`Determined polling interval ${pollIntervalSeconds} sec`)
+	}
 
-	console.log('Determined polling interval:', pollingIntervalMinutes)
+	const pollingIntervalMinutes = Math.round(pollIntervalSeconds / 60)
 
-	// Schedule tasks
 	scheduleTasks(pollingIntervalMinutes, storeIntervalMinutes)
 	console.log('Scheduled check and store tasks')
 })()

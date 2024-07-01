@@ -50,10 +50,77 @@ Run the following command to initialize the database within the project folder:
 mongo --eval "use bikedata"
 ```
 
-### 6. Start the Application
+### 6. Start Server
 ```sh
-npm start
+npm run server
 ```
+
+### 6. Start Client
+```sh
+npm run client
+```
+Runs the front-end app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
+
+## Tests
+
+Run unit tests
+```sh
+npm test
+```
+## Database helpers
+
+Fills MongoDB database with dummy data
+```sh
+npm run fill-db
+```
+
+Resets MongoDB database
+```sh
+npm run reset-db
+```
+
+## Build
+
+Build client:
+```sh
+npm run build-client
+```
+
+Build server:
+```sh
+npm run build-server
+```
+
+Build both:
+```sh
+npm run build
+```
+
+Builds the app for production to the `build` folder.
+
+The build is minified and the filenames include the hashes.\
+
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+## Configuration
+
+Can be adjusted in ```config.json```
+
+| Option                  | Description                                                                                                         | Default Value                            |
+|-------------------------|---------------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| `cities`                | List of cities to be monitored.                                                                                     | `["Barcelona", "Paris"]`                 |
+| `storeIntervalMinutes`  | Interval in minutes at which data should be stored in the database.                                                 | `60`                                     |
+| `networkCacheMinutes`   | Duration in minutes for which the network data should be cached.                                                    | `1440`                                   |
+| `pollIntervalSeconds`   | Current polling interval in seconds. If set to `null`, the initial polling interval will be detected automatically. | `null`                                   |
+| `pollIntervalSecondsInit`| Initial polling interval in seconds used at the start of the monitoring process.                                    | `60`                                     |
+| `pollIntervalSecondsMin`| Minimum allowable polling interval in seconds.                                                                      | `10`                                     |
+| `pollIntervalSecondsMax`| Maximum allowable polling interval in seconds.                                                                      | `300`                                    |
+| `mongoUrl`              | URL for connecting to the MongoDB database.                                                                         | `"mongodb://localhost:27017/bikedata"`   |
+| `debug`                 | Enable or disable debug mode. When enabled, additional debug information will be logged.                            | `true`                                   |
 
 ## API Endpoints
 
@@ -67,34 +134,13 @@ GET /api/bikedata?city=<city>&start=<start-date>&end=<end-date>
 	- `start`: The start date (YYYY-MM-DD).
 	- `end`: The end date (YYYY-MM-DD).
 
-## Available Scripts
+## Possible improvements
+- UI live update
+- Add CLI/dotenv config support
 
-In the project directory, you can run:
+## create-react-app scripts
 
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
+### `npm run eject-cra`
 
 **Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 

@@ -8,6 +8,7 @@ export interface Network {
 
 export interface Station {
 	id: string
+	name: string
 	timestamp: string
 	free_bikes: number
 }

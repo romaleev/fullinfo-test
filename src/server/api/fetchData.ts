@@ -1,6 +1,6 @@
 import ky from 'ky'
 import { Network, NetworkResponse, Station, StationsResponse, NetworkCache } from '#src/interfaces'
-import { networkCacheMinutes } from '#src/config.json'
+import { networkCacheMinutes } from '#root/config.json'
 
 // In-memory cache with timestamp
 const networkCache: { [city: string]: NetworkCache } = {}
@@ -18,11 +18,11 @@ const fetchNetwork = async (city: string): Promise<Network | null> => {
 
 	const response = await ky
 		.get('http://api.citybik.es/v2/networks?fields=id,location')
-		.json<NetworkResponse>()
-	const networks: Network[] = response.networks
+		?.json<NetworkResponse>()
+	const networks: Network[] = response?.networks
 
 	const network =
-		networks.find((network) => network.location.city.toLowerCase() === city.toLowerCase()) || null
+		networks?.find((network) => network.location.city.toLowerCase() === city.toLowerCase()) || null
 
 	// Update cache with network data and timestamp
 	networkCache[city] = {
@@ -41,6 +41,7 @@ export const fetchCityData = async (city: string): Promise<Station[]> => {
 
 	const response = await ky
 		.get(`http://api.citybik.es/v2/networks/${network.id}?fields=stations`)
-		.json<StationsResponse>()
-	return response.network.stations
+		?.json<StationsResponse>()
+
+	return response?.network?.stations || []
 }

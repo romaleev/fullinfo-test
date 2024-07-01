@@ -1,17 +1,17 @@
 import cron from 'node-cron'
-import { fetchCityData } from '#server/fetchData'
-import { storeBikeData } from '#server/storeData'
-import { cities } from '#src/config.json'
+import { fetchCityData } from '#server/api/fetchData'
+import { storeBikeData } from '#server/db/storeData'
+import { cities } from '#root/config.json'
 import { Station } from '#src/interfaces'
 
-const calculateTotalFreeBikes = (stations: Station[]): number => {
+export const calculateTotalFreeBikes = (stations: Station[]): number => {
 	const totalFreeBikes = stations.reduce((sum, station) => sum + (station.free_bikes || 0), 0)
 	return totalFreeBikes
 }
 
-const cityData = new Map<string, number[]>()
+export const cityData = new Map<string, number[]>()
 
-const pollData = async (): Promise<void> => {
+export const pollData = async (): Promise<void> => {
 	for (const city of cities) {
 		try {
 			const stations = await fetchCityData(city)
@@ -28,7 +28,7 @@ const pollData = async (): Promise<void> => {
 	}
 }
 
-const storeHourlyAverage = async (): Promise<void> => {
+export const storeHourlyAverage = async (): Promise<void> => {
 	for (const city of cities) {
 		const data = cityData.get(city) || []
 		const total = data.reduce((sum, value) => sum + value, 0)
@@ -56,8 +56,3 @@ export const scheduleTasks = (
 		await storeHourlyAverage()
 	})
 }
-// ;(async () => {
-// 	await pollData()
-// 	console.log(0, cityData)
-// 	await storeHourlyAverage()
-// })()
