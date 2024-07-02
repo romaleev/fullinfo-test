@@ -16,48 +16,17 @@ Prepare a short presentation to explain your understanding of the problem, the a
 
 ![chart](presentation/chart.png)
 
-## Installation
+## Scripts
 
-### 1. Clone the Repository
-```sh
-git clone <repository-url>
-cd <repository-directory>
-```
-
-### 2. Install Dependencies
-```sh
-npm install
-```
-
-### 3. Install MongoDB
-Follow the instructions on the [MongoDB website](https://docs.mongodb.com/manual/installation/) to install MongoDB on your machine.
-
-### 4. Start MongoDB
-Ensure that MongoDB is running on your machine. You can start MongoDB using the following command:
-
-- **On macOS and Linux**:
-```sh
-sudo service mongod start
-```
-
-- **On Windows**:
-Start the MongoDB service from the Services application or using the command prompt:
-```sh
-net start MongoDB
-```
-
-### 5. Initialize the Database
-Run the following command to initialize the database within the project folder:
-```sh
-mongo --eval "use bikedata"
-```
-
-### 6. Start Server
+### Start Server
 ```sh
 npm run server
 ```
+Starts the back-end server, provides the api for the front-end as well as, schedules api poll and database store tasks.
+If not set, smartly detects the polling interval.
+Starts in-memory MongoDB with dummy data in development mode.
 
-### 6. Start Client
+### Start Client
 ```sh
 npm run client
 ```
@@ -75,12 +44,12 @@ npm test
 ```
 ## Database helpers
 
-Fills MongoDB database with dummy data
+Fills MongoDB database with dummy data connected with Config.json mongoUrl url
 ```sh
 npm run fill-db
 ```
 
-Resets MongoDB database
+Resets MongoDB database connected with Config.json mongoUrl url
 ```sh
 npm run reset-db
 ```
@@ -146,6 +115,7 @@ GET /api/bikedata?city=<city>&start=<start-date>&end=<end-date>
 ## Possible improvements
 - UI live update
 - Add CLI/dotenv config support
+- Follow the installation and run instructions on the [MongoDB website](https://docs.mongodb.com/manual/installation/) to install MongoDB for production.
 
 ## create-react-app scripts
 

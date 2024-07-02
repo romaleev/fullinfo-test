@@ -12,16 +12,40 @@ import {
 } from '#root/config.json'
 import { BikeDataModel } from '#server/db/storeData'
 import { determinePollingIntervalSeconds } from '#server/api/pollingInterval'
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import nodeCleanup from 'node-cleanup'
+import { storeDummyData } from '#server/db/storeDummyData'
 
-const app = express()
-const port = process.env.PORT || 4000
+process.title = 'fullinfo-test-server'
+;(async () => {
+	const app = express()
+	const port = process.env.PORT || 4000
+	const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
+	console.log(`Mode: ${mode}`)
 
-app.use(bodyParser.json())
+	app.use(bodyParser.json())
 
-mongoose
-	.connect(mongoUrl)
-	.then(async () => {
+	let mongoUrlActual = mongoUrl
+
+	if (mode === 'development') {
+		const mongod = await MongoMemoryServer.create()
+		mongoUrlActual = mongod.getUri()
+
+		console.log('Started in-memory MongoDB, url:', mongoUrlActual)
+
+		nodeCleanup(() => {
+			mongod.stop()
+		})
+	}
+
+	try {
+		await mongoose.connect(mongoUrlActual)
+
 		console.log('Connected successfully to MongoDB')
+
+		if (mode === 'development') {
+			await storeDummyData()
+		}
 
 		if (debug) {
 			const data = await BikeDataModel.find()
@@ -34,17 +58,16 @@ mongoose
 				})),
 			)
 		}
-	})
-	.catch((err) => {
-		console.error('Failed to connect to MongoDB', err)
+	} catch (error) {
+		console.error('Failed to connect to MongoDB', error)
+	}
+
+	setupApiEndpoints(app)
+
+	app.listen(port, () => {
+		console.log(`Server running on port ${port}`)
 	})
 
-setupApiEndpoints(app)
-
-app.listen(port, () => {
-	console.log(`Server running on port ${port}`)
-})
-;(async () => {
 	let pollIntervalSeconds: number
 	if (pollIntervalSecondsDefault) {
 		pollIntervalSeconds = pollIntervalSecondsDefault
