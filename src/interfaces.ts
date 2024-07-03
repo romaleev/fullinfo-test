@@ -38,3 +38,7 @@ export interface NetworkCache {
 	network: Network | null
 	timestamp: number
 }
+
+export interface CityStations {
+	[city: string]: Station[]
+}

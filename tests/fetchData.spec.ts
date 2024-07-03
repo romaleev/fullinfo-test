@@ -1,6 +1,8 @@
 import ky from 'ky'
 import { fetchCityData } from '#server/api/fetchData'
 import { NetworkResponse, StationsResponse, Network, Station } from '#src/interfaces'
+import { networksUrl, networkUrl } from '#root/config.json'
+import { getTemplateLiteral } from '#src/util'
 
 jest.mock('ky')
 
@@ -31,13 +33,15 @@ describe('fetchCityData', () => {
 		jest.clearAllMocks()
 	})
 
+	const networkUrlCompiled = getTemplateLiteral(networkUrl, { network: { id: 'network1' } })
+
 	it('should fetch and return stations data for a city', async () => {
 		;(ky.get as jest.Mock).mockImplementation((url) => {
-			if (url === 'http://api.citybik.es/v2/networks?fields=id,location') {
+			if (url === networksUrl) {
 				return {
 					json: async () => mockNetworkResponse,
 				}
-			} else if (url === 'http://api.citybik.es/v2/networks/network1?fields=stations') {
+			} else if (url === networkUrlCompiled) {
 				return {
 					json: async () => mockStationsResponse,
 				}
@@ -51,15 +55,13 @@ describe('fetchCityData', () => {
 		const stations = await fetchCityData(city)
 
 		expect(stations).toEqual(mockStationsResponse.network.stations)
-		expect(ky.get).toHaveBeenCalledWith('http://api.citybik.es/v2/networks?fields=id,location')
-		expect(ky.get).toHaveBeenCalledWith(
-			'http://api.citybik.es/v2/networks/network1?fields=stations',
-		)
+		expect(ky.get).toHaveBeenCalledWith(networksUrl)
+		expect(ky.get).toHaveBeenCalledWith(networkUrlCompiled)
 	})
 
 	it('should throw an error if no network is found for the city', async () => {
 		;(ky.get as jest.Mock).mockImplementation((url) => {
-			if (url === 'http://api.citybik.es/v2/networks?fields=id,location') {
+			if (url === networksUrl) {
 				return {
 					json: async () => mockEmptyNetworkResponse,
 				}

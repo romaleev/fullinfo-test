@@ -1,12 +1,12 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import bodyParser from 'body-parser'
-import { scheduleTasks } from '#server/scheduleTasks'
+import { schedulePollStoreTasks } from '#server/scheduleTasks'
 import { setupApiEndpoints } from '#server/serverApi'
 import {
 	debug,
 	mongoUrl,
-	storeIntervalMinutes,
+	storeIntervalSeconds,
 	cities,
 	pollIntervalSeconds as pollIntervalSecondsDefault,
 } from '#root/config.json'
@@ -76,8 +76,6 @@ process.title = 'fullinfo-test-server'
 		console.log(`Determined polling interval ${pollIntervalSeconds} sec`)
 	}
 
-	const pollingIntervalMinutes = Math.round(pollIntervalSeconds / 60)
-
-	scheduleTasks(pollingIntervalMinutes, storeIntervalMinutes)
+	schedulePollStoreTasks(pollIntervalSeconds, storeIntervalSeconds)
 	console.log('Scheduled check and store tasks')
 })()

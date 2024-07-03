@@ -24,6 +24,7 @@
     "build-server": "tsc --project tsconfig.build.json",
     "eject-cra": "react-scripts eject",
     "update": "npm i npm-check-updates@latest --save-dev && ncu -u && npm i && npm audit fix && npm test",
+    "presentation": "reveal-md presentation.md",
     "prepare": "husky"
   },
   "imports": {
@@ -85,6 +86,7 @@
     "prettier-plugin-organize-imports": "^3.2.4",
     "react-scripts": "5.0.1",
     "recharts": "^2.13.0-alpha.4",
+    "reveal-md": "^6.1.2",
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",

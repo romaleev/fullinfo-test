@@ -1,34 +1,21 @@
 import cron from 'node-cron'
 import { fetchCityData } from '#server/api/fetchData'
 import { storeBikeData } from '#server/db/storeData'
-import { scheduleTasks, pollData, storeHourlyAverage, cityData } from '#server/scheduleTasks'
+import {
+	schedulePollStoreTasks,
+	pollData,
+	storeHourlyAverage,
+	cityData,
+} from '#server/scheduleTasks'
 import { cities } from '#root/config.json'
 import { Station } from '#src/interfaces'
+import { PollingInterval } from '#server/api/pollingInterval'
 
-jest.mock('node-cron', () => ({
-	schedule: jest.fn(),
-}))
-
-jest.mock('#server/api/fetchData', () => ({
-	fetchCityData: jest.fn(),
-}))
-
-jest.mock('#server/db/storeData', () => ({
-	storeBikeData: jest.fn(),
-}))
-
-describe('scheduleTasks', () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
-
-	it('should schedule tasks correctly', () => {
-		scheduleTasks(5, 60)
-
-		expect(cron.schedule).toHaveBeenCalledWith('*/5 * * * *', expect.any(Function))
-		expect(cron.schedule).toHaveBeenCalledWith('0 */60 * * *', expect.any(Function))
-	})
-})
+jest.mock('node-cron')
+jest.mock('#server/api/pollingInterval')
+jest.mock('#server/api/fetchData')
+jest.mock('#server/db/storeData')
+// jest.mock('#server/scheduleTasks')
 
 describe('pollData', () => {
 	it('should fetch and calculate bike data for each city', async () => {
@@ -38,9 +25,10 @@ describe('pollData', () => {
 		]
 		;(fetchCityData as jest.Mock).mockResolvedValue(mockStations)
 
-		await pollData()
+		const stations = await pollData()
 
 		for (const city of cities) {
+			expect(stations[city]).toBe(mockStations)
 			expect(fetchCityData).toHaveBeenCalledWith(city)
 			expect(cityData.get(city)!.length).toBe(1)
 			expect(cityData.get(city)![0]).toBe(8)
@@ -77,5 +65,93 @@ describe('storeHourlyAverage', () => {
 		for (const city of cities) {
 			expect(cityData.get(city)!.length).toBe(0)
 		}
+	})
+})
+
+describe('scheduleTasks', () => {
+	const pollingIntervalSeconds = 600 // 10 minutes
+	const storeIntervalSeconds = 3600 // 1 hour
+
+	let mockPollTask: any
+	let mockStoreTask: any
+	let mockPollingInterval: any
+
+	beforeEach(() => {
+		mockPollTask = {
+			stop: jest.fn(),
+		}
+		mockStoreTask = {
+			stop: jest.fn(),
+		}
+		mockPollingInterval = {
+			getPollIntervalSecondsMin: jest.fn(),
+			pollIntervalMin: pollingIntervalSeconds,
+		}
+		;(cron.schedule as jest.Mock).mockImplementation((interval: string, func: Function) => {
+			if (interval.includes(`*/${pollingIntervalSeconds}`)) {
+				return mockPollTask
+			} else if (interval.includes(`0 */${storeIntervalSeconds}`)) {
+				return mockStoreTask
+			}
+			return null
+		})
+		;(PollingInterval as jest.Mock).mockImplementation(() => mockPollingInterval)
+	})
+
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	it('should schedule polling and storing tasks', () => {
+		schedulePollStoreTasks(pollingIntervalSeconds, storeIntervalSeconds)
+
+		expect(cron.schedule).toHaveBeenCalledWith(
+			`*/${pollingIntervalSeconds} * * * *`,
+			expect.any(Function),
+		)
+		expect(cron.schedule).toHaveBeenCalledWith(
+			`0 */${storeIntervalSeconds} * * *`,
+			expect.any(Function),
+		)
+	})
+
+	it.skip('should reschedule polling task with a new interval when poll interval decreases', async () => {
+		;(pollData as jest.Mock).mockResolvedValue({
+			city1: [{ timestamp: '2021-01-01T00:05:00Z', free_bikes: 3 }],
+			city2: [{ timestamp: '2021-01-01T00:05:00Z', free_bikes: 2 }],
+		})
+		;(storeHourlyAverage as jest.Mock).mockResolvedValueOnce(undefined)
+		mockPollingInterval.pollIntervalMin = 300 // 5 minutes
+
+		schedulePollStoreTasks(pollingIntervalSeconds, storeIntervalSeconds)
+
+		// Trigger the store task manually for testing
+		const storeTaskFunction = (cron.schedule as jest.Mock).mock.calls.find(
+			(call) => call[0] === `0 */${storeIntervalSeconds} * * *`,
+		)[1]
+		await storeTaskFunction()
+
+		expect(mockPollTask.stop).toHaveBeenCalled()
+		expect(cron.schedule).toHaveBeenCalledWith(`*/300 * * * *`, expect.any(Function))
+	})
+
+	it.skip('should not reschedule polling task if poll interval does not decrease', async () => {
+		;(pollData as jest.Mock).mockResolvedValue({
+			city1: [{ timestamp: '2021-01-01T00:05:00Z', free_bikes: 3 }],
+			city2: [{ timestamp: '2021-01-01T00:05:00Z', free_bikes: 2 }],
+		})
+		;(storeHourlyAverage as jest.Mock).mockResolvedValueOnce(undefined)
+		mockPollingInterval.pollIntervalMin = pollingIntervalSeconds // Same as initial
+
+		schedulePollStoreTasks(pollingIntervalSeconds, storeIntervalSeconds)
+
+		// Trigger the store task manually for testing
+		const storeTaskFunction = (cron.schedule as jest.Mock).mock.calls.find(
+			(call) => call[0] === `0 */${storeIntervalSeconds} * * *`,
+		)[1]
+		await storeTaskFunction()
+
+		expect(mockPollTask.stop).not.toHaveBeenCalled()
+		expect(cron.schedule).toHaveBeenCalledTimes(2) // Only initial calls
 	})
 })

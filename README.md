@@ -36,6 +36,13 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+## Presentation
+
+Run presentation slides
+```sh
+npm run presentation
+```
+
 ## Tests
 
 Run unit tests
@@ -73,7 +80,7 @@ npm run build
 
 Builds the app for production to the `build` folder.
 
-The build is minified and the filenames include the hashes.\
+The build is minified and the filenames include the hashes.
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
@@ -88,17 +95,19 @@ npm run update
 
 Can be adjusted in ```config.json```
 
-| Option                  | Description                                                                                                         | Default Value                            |
-|-------------------------|---------------------------------------------------------------------------------------------------------------------|------------------------------------------|
-| `cities`                | List of cities to be monitored.                                                                                     | `["Barcelona", "Paris"]`                 |
-| `storeIntervalMinutes`  | Interval in minutes at which data should be stored in the database.                                                 | `60`                                     |
-| `networkCacheMinutes`   | Duration in minutes for which the network data should be cached.                                                    | `1440`                                   |
-| `pollIntervalSeconds`   | Current polling interval in seconds. If set to `null`, the initial polling interval will be detected automatically. | `null`                                   |
-| `pollIntervalSecondsInit`| Initial polling interval in seconds used at the start of the monitoring process.                                    | `60`                                     |
-| `pollIntervalSecondsMin`| Minimum allowable polling interval in seconds.                                                                      | `10`                                     |
-| `pollIntervalSecondsMax`| Maximum allowable polling interval in seconds.                                                                      | `300`                                    |
-| `mongoUrl`              | URL for connecting to the MongoDB database.                                                                         | `"mongodb://localhost:27017/bikedata"`   |
-| `debug`                 | Enable or disable debug mode. When enabled, additional debug information will be logged.                            | `true`                                   |
+| Option                    | Description                                                                                                         | Default Value                            |
+|---------------------------|---------------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| `cities`                  | List of cities to be monitored.                                                                                     | `["Barcelona", "Paris"]`                 |
+| `networkCacheMinutes`     | Duration in minutes for which the network data should be cached.                                                    | `1440`                                   |
+| `storeIntervalSeconds`    | Interval in seconds at which data should be stored in the database.                                                 | `60`                                     |
+| `pollIntervalSeconds`     | Current polling interval in seconds. If set to `null`, the initial polling interval will be detected automatically. | `null`                                   |
+| `pollIntervalSecondsInit` | Initial polling interval in seconds used at the start of the monitoring process.                                    | `60`                                     |
+| `pollIntervalSecondsMin`  | Minimum allowable polling interval in seconds.                                                                      | `10`                                     |
+| `pollIntervalSecondsMax`  | Maximum allowable polling interval in seconds.                                                                      | `300`                                    |
+| `networkUrl`              | URL for connecting to the network bike API.                                                                         | `"http://api.citybik.es/v2/networks/${network.id}?fields=stations"`   |
+| `networksUrl`             | URL for connecting to the networks bike API.                                                                        | `"http://api.citybik.es/v2/networks?fields=id,location"`   |
+| `mongoUrl`                | URL for connecting to the MongoDB database.                                                                         | `"mongodb://localhost:27017/bikedata"`   |
+| `debug`                   | Enable or disable debug mode. When enabled, additional debug information will be logged.                            | `true`                                   |
 
 ## API Endpoints
 

@@ -1,7 +1,8 @@
 import {
 	determinePollingIntervalSeconds,
 	getStationsIntervalMin,
-} from '#server/api/pollingInterval' // Adjust the import path as needed
+	PollingInterval,
+} from '#server/api/pollingInterval'
 import {
 	cities,
 	pollIntervalSecondsInit,
@@ -10,7 +11,7 @@ import {
 } from '#root/config.json'
 import { fetchCityData } from '#server/api/fetchData'
 import { sleep } from '#src/util'
-import { Station } from '#src/interfaces'
+import { Station, CityStations } from '#src/interfaces'
 
 jest.mock('#root/config.json', () => ({
 	pollIntervalSecondsInit: 2,
@@ -32,31 +33,20 @@ interface MockStations {
 	[city: string]: Station[]
 }
 
+const getStationMock = (
+	idName: string,
+	free_bikes: number,
+	timestampDiffSeconds: number = 0,
+): Station => ({
+	id: idName,
+	name: idName,
+	free_bikes,
+	timestamp: new Date(`2023-01-01T00:00:0${timestampDiffSeconds}Z`).toISOString(),
+})
+
 const getPollingMock = (timestampDiffSeconds: number = 0): MockStations => ({
-	[city1]: [
-		{
-			id: 'station1',
-			free_bikes: 4,
-			timestamp: new Date('2023-01-01T00:00:00Z').toISOString(),
-		} as Station,
-		{
-			id: 'station2',
-			free_bikes: 2,
-			timestamp: new Date(`2023-01-01T00:00:0${timestampDiffSeconds}Z`).toISOString(),
-		} as Station,
-	],
-	[city2]: [
-		{
-			id: 'station3',
-			free_bikes: 1,
-			timestamp: new Date(`2023-01-01T00:00:00Z`).toISOString(),
-		} as Station,
-		{
-			id: 'station4',
-			free_bikes: 0,
-			timestamp: new Date('2023-01-01T00:00:00Z').toISOString(),
-		} as Station,
-	],
+	[city1]: [getStationMock('station1', 4, 0), getStationMock('station2', 2, timestampDiffSeconds)],
+	[city2]: [getStationMock('station3', 1, 0), getStationMock('station4', 0, 0)],
 })
 
 const mockStations = getPollingMock(0)
@@ -152,5 +142,61 @@ describe('getStationsIntervalMin', () => {
 		const minInterval = getStationsIntervalMin(stations1, stations2)
 
 		expect(minInterval).toBe(pollIntervalSecondsInit)
+	})
+})
+
+describe('PollingInterval', () => {
+	let pollingInterval: PollingInterval
+	const cities = ['city1', 'city2']
+
+	beforeEach(() => {
+		pollingInterval = new PollingInterval(cities)
+	})
+
+	it('should initialize with empty stationsLast and max poll interval', () => {
+		expect(pollingInterval['stationsLast']).toEqual({})
+		expect(pollingInterval['pollIntervalMin']).toBe(pollIntervalSecondsMax)
+	})
+
+	it('should return false for isStationsLast when stationsLast is empty', () => {
+		expect(pollingInterval.isStationsLast).toBe(false)
+	})
+
+	it('should return true for isStationsLast when stationsLast is not empty', () => {
+		pollingInterval['stationsLast'] = {
+			city1: [getStationMock('station1', 5, 0)],
+			city2: [getStationMock('station2', 5, 0)],
+		}
+		expect(pollingInterval.isStationsLast).toBe(true)
+	})
+
+	it('should calculate the minimum poll interval based on station changes', () => {
+		const initialStations: CityStations = {
+			city1: [getStationMock('station1', 5, 0)],
+			city2: [getStationMock('station2', 5, 0)],
+		}
+		const newStations: CityStations = {
+			city1: [getStationMock('station1', 3, pollIntervalSecondsMin)],
+			city2: [getStationMock('station2', 2, 0)],
+		}
+
+		pollingInterval.getPollIntervalSecondsMin(initialStations)
+		const pollInterval = pollingInterval.getPollIntervalSecondsMin(newStations)
+
+		expect(pollInterval).toBe(pollIntervalSecondsMin)
+	})
+
+	it('should retain the max poll interval if no changes are detected', () => {
+		const initialStations: CityStations = {
+			city1: [getStationMock('station1', 5, 0)],
+			city2: [getStationMock('station2', 5, 0)],
+		}
+
+		pollingInterval['stationsLast'] = initialStations
+		const pollInterval = pollingInterval.getPollIntervalSecondsMin(initialStations)
+
+		expect(pollInterval).toBe(pollIntervalSecondsMax)
+		expect(pollingInterval['pollIntervalMin']).toBe(pollIntervalSecondsMax)
+		expect(pollingInterval['stationsLast']).toBe(initialStations)
 	})
 })

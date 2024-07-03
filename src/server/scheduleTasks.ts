@@ -1,8 +1,9 @@
 import cron from 'node-cron'
 import { fetchCityData } from '#server/api/fetchData'
 import { storeBikeData } from '#server/db/storeData'
-import { cities } from '#root/config.json'
-import { Station } from '#src/interfaces'
+import { cities, debug } from '#root/config.json'
+import { Station, CityStations } from '#src/interfaces'
+import { PollingInterval } from '#server/api/pollingInterval'
 
 export const calculateTotalFreeBikes = (stations: Station[]): number => {
 	const totalFreeBikes = stations.reduce((sum, station) => sum + (station.free_bikes || 0), 0)
@@ -11,11 +12,13 @@ export const calculateTotalFreeBikes = (stations: Station[]): number => {
 
 export const cityData = new Map<string, number[]>()
 
-export const pollData = async (): Promise<void> => {
+export const pollData = async (): Promise<CityStations> => {
+	const stations: { [city: string]: Station[] } = {}
+
 	for (const city of cities) {
 		try {
-			const stations = await fetchCityData(city)
-			const totalFreeBikes = calculateTotalFreeBikes(stations)
+			stations[city] = await fetchCityData(city)
+			const totalFreeBikes = calculateTotalFreeBikes(stations[city])
 
 			if (!cityData.has(city)) {
 				cityData.set(city, [])
@@ -26,6 +29,8 @@ export const pollData = async (): Promise<void> => {
 			console.error(`Error fetching data for ${city}:`, error)
 		}
 	}
+
+	return stations
 }
 
 export const storeHourlyAverage = async (): Promise<void> => {
@@ -42,17 +47,33 @@ export const storeHourlyAverage = async (): Promise<void> => {
 	}
 }
 
-export const scheduleTasks = (
-	pollingIntervalMinutes: number,
-	storeIntervalMinutes: number,
+export const schedulePollStoreTasks = (
+	pollingIntervalSeconds: number,
+	storeIntervalSeconds: number,
 ): void => {
+	let pollingIntervalSecondsCurrent = pollingIntervalSeconds
+	const pollingInterval = new PollingInterval(cities)
+
+	let pollTaskFunc = async () => {
+		const stations = await pollData()
+		pollingInterval.getPollIntervalSecondsMin(stations)
+	}
+
 	// Poll every specified number of minutes
-	cron.schedule(`*/${pollingIntervalMinutes} * * * *`, async () => {
-		await pollData()
-	})
+	let pollTask = cron.schedule(`*/${pollingIntervalSecondsCurrent} * * * *`, pollTaskFunc)
+
+	const reschedulePollTask = () => {
+		debug && console.log('Rescheduled with the new polling interval', pollingIntervalSecondsCurrent)
+		pollTask.stop()
+		pollTask = cron.schedule(`*/${pollingIntervalSecondsCurrent} * * * *`, pollTaskFunc)
+	}
 
 	// Calculate and store every specified number of minutes
-	cron.schedule(`0 */${storeIntervalMinutes} * * *`, async () => {
+	const storeTask = cron.schedule(`0 */${storeIntervalSeconds} * * *`, async () => {
 		await storeHourlyAverage()
+		if (pollingInterval.pollIntervalMin < pollingIntervalSecondsCurrent) {
+			pollingIntervalSecondsCurrent = pollingInterval.pollIntervalMin
+			reschedulePollTask()
+		}
 	})
 }

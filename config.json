@@ -3,12 +3,14 @@
 		"Barcelona",
 		"Paris"
 	],
-	"storeIntervalMinutes": 60,
 	"networkCacheMinutes": 1440,
+	"storeIntervalSeconds": 3600,
 	"pollIntervalSeconds": null,
 	"pollIntervalSecondsInit": 60,
 	"pollIntervalSecondsMin": 10,
 	"pollIntervalSecondsMax": 300,
 	"mongoUrl": "mongodb://localhost:27017/bikedata",
+	"networksUrl": "http://api.citybik.es/v2/networks?fields=id,location",
+	"networkUrl": "http://api.citybik.es/v2/networks/${network.id}?fields=stations",
 	"debug": false
 }

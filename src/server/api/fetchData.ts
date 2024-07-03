@@ -1,6 +1,7 @@
 import ky from 'ky'
 import { Network, NetworkResponse, Station, StationsResponse, NetworkCache } from '#src/interfaces'
-import { networkCacheMinutes } from '#root/config.json'
+import { networkCacheMinutes, networksUrl, networkUrl } from '#root/config.json'
+import { getTemplateLiteral } from '#src/util'
 
 // In-memory cache with timestamp
 const networkCache: { [city: string]: NetworkCache } = {}
@@ -16,21 +17,27 @@ const fetchNetwork = async (city: string): Promise<Network | null> => {
 		return networkCache[city].network
 	}
 
-	const response = await ky
-		.get('http://api.citybik.es/v2/networks?fields=id,location')
-		?.json<NetworkResponse>()
-	const networks: Network[] = response?.networks
+	try {
+		const response = await ky.get(networksUrl)?.json<NetworkResponse>()
+		const networks: Network[] = response?.networks
 
-	const network =
-		networks?.find((network) => network.location.city.toLowerCase() === city.toLowerCase()) || null
+		const network =
+			networks?.find((network) => network?.location?.city?.toLowerCase() === city.toLowerCase()) ||
+			null
 
-	// Update cache with network data and timestamp
-	networkCache[city] = {
-		network,
-		timestamp: Date.now(),
+		// Update cache with network data and timestamp
+		if (network) {
+			networkCache[city] = {
+				network,
+				timestamp: Date.now(),
+			}
+		}
+
+		return network
+	} catch (error) {
+		console.log(error)
+		return null
 	}
-
-	return network
 }
 
 export const fetchCityData = async (city: string): Promise<Station[]> => {
@@ -39,9 +46,14 @@ export const fetchCityData = async (city: string): Promise<Station[]> => {
 		throw new Error(`No network found for city: ${city}`)
 	}
 
-	const response = await ky
-		.get(`http://api.citybik.es/v2/networks/${network.id}?fields=stations`)
-		?.json<StationsResponse>()
+	try {
+		const response = await ky
+			.get(getTemplateLiteral(networkUrl, { network }))
+			?.json<StationsResponse>()
 
-	return response?.network?.stations || []
+		return response?.network?.stations || []
+	} catch (error) {
+		console.log(error)
+		return []
+	}
 }
